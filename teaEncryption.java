@@ -19,11 +19,12 @@ public class teaEncryption {
 		return returnArray;
 	}
 
-	public static String encrypt(Long[] keyArray,Long delta,String plainText) {
+	public static Long encrypt(Long[] keyArray,Long delta,Long plainText) {
 		Long sum = 0L;
-		Long left =  Long.parseLong(plainText.substring(2,10),16);
-		Long right = Long.parseLong(plainText.substring(10,18),16);
 		Long bitMask = 0x00000000FFFFFFFFL;
+
+		Long left =  plainText>>>32;
+		Long right = plainText & bitMask;
 
 		for (int i=0; i<32; i++) {
 			sum += delta;
@@ -41,46 +42,57 @@ public class teaEncryption {
 
 		String cipherText = left+""+right;
 		System.out.println("Encrypted: "+Long.toHexString(left)+""+Long.toHexString(right));
-		return cipherText;
+
+		left = left << 32;
+		System.out.println("Encrypted Left: "+Long.toHexString(left));
+		System.out.println("Encrypted Right: "+Long.toHexString(right));
+		Long cipherLong = left | right;
+		System.out.println("Encrypted Long: "+Long.toHexString(cipherLong));
+
+		return cipherLong;
 	}
 
-	public static String decrypt(Long[] keyArray,Long delta, String encryptedText) {
+	public static Long decrypt(Long[] keyArray,Long delta, Long encryptedText) {
 
-		Long sum = 0L;
-		Long left =  Long.parseLong(encryptedText.substring(2,10),16);
-		Long right = Long.parseLong(encryptedText.substring(10,18),16);
 		Long bitMask = 0x00000000FFFFFFFFL;
+		Long sum  = delta << 5;
+		Long left =  encryptedText >>> 32;
+		Long right = encryptedText & bitMask;
+
 		for (int i=0; i<32; i++) {
-			sum += delta;
 			sum = sum & bitMask;
 			right -= ((left<<4)+keyArray[2]) ^ (left+sum) ^ ((left>>>5)+keyArray[3]);
 			right = right & bitMask;
 			left -= ((right<<4)+keyArray[0]) ^ (right+sum) ^ ((right>>>5)+keyArray[1]);
 			left = left & bitMask;
+			sum -= delta;
 			sum = sum & bitMask;
 		}
 
 		right = right & bitMask;
 		left = left & bitMask;
-		String unencryptedText = Long.toHexString(left)+""+Long.toHexString(right);
-		System.out.println("Decrypted: "+Long.toHexString(left)+""+Long.toHexString(right));
-		return unencryptedText;
+		left = left << 32;
+		Long decryptedText = left | right;
+		Long decryptMask = 0x7FFFFFFFFFFFFFFFL;
+		decryptedText = decryptedText & decryptMask;
+		System.out.println("Decrypted: "+Long.toHexString(decryptedText));
+		return decryptedText;
 	}
 
 
 	public static void main(String args[]) {
 		String keyString1 = "0xA56BABCD0000F000FFFFFFFFABCDEF01";
-		Long delta = Long.parseLong("9e3779b9",16);
+		Long delta = 0x9e3779b9L;
 
 		Long[] keyArray = convertStringToArray(keyString1);
 
-		String plain = "0x0123456789ABCDEF";
+		Long plain = 0x0123456789ABCDEFL;
 
-		String encryptedText = encrypt(keyArray,delta,plain);
+		Long encryptedText = encrypt(keyArray,delta,plain);
+		Long decryptedText = decrypt(keyArray,delta,encryptedText);
+
 		System.out.println("Encrypted: "+encryptedText);
-		String decryptedText = decrypt(keyArray,delta,encryptedText);
-		System.out.println("Decrypted: "+decryptedText);
 
-
+		System.out.println("Decrypted: "+Long.toHexString(decryptedText));
 	}
 }
