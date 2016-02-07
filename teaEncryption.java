@@ -19,16 +19,68 @@ public class teaEncryption {
 		return returnArray;
 	}
 
+	public static String encrypt(Long[] keyArray,Long delta,String plainText) {
+		Long sum = 0L;
+		Long left =  Long.parseLong(plainText.substring(2,10),16);
+		Long right = Long.parseLong(plainText.substring(10,18),16);
+		Long bitMask = 0x00000000FFFFFFFFL;
+
+		for (int i=0; i<32; i++) {
+			sum += delta;
+			sum = sum & bitMask;
+			left += ((right<<4)+keyArray[0]) ^ (right+sum) ^ ((right>>>5)+keyArray[1]);
+			left = left & bitMask;
+			right += ((left<<4)+keyArray[2]) ^ (left+sum) ^ ((left>>>5)+keyArray[3]);
+			right = right & bitMask;
+
+			sum = sum & bitMask;
+		}
+
+		right = right & bitMask;
+		left = left & bitMask;
+
+		String cipherText = left+""+right;
+		System.out.println("Encrypted: "+Long.toHexString(left)+""+Long.toHexString(right));
+		return cipherText;
+	}
+
+	public static String decrypt(Long[] keyArray,Long delta, String encryptedText) {
+
+		Long sum = 0L;
+		Long left =  Long.parseLong(encryptedText.substring(2,10),16);
+		Long right = Long.parseLong(encryptedText.substring(10,18),16);
+		Long bitMask = 0x00000000FFFFFFFFL;
+		for (int i=0; i<32; i++) {
+			sum += delta;
+			sum = sum & bitMask;
+			right -= ((left<<4)+keyArray[2]) ^ (left+sum) ^ ((left>>>5)+keyArray[3]);
+			right = right & bitMask;
+			left -= ((right<<4)+keyArray[0]) ^ (right+sum) ^ ((right>>>5)+keyArray[1]);
+			left = left & bitMask;
+			sum = sum & bitMask;
+		}
+
+		right = right & bitMask;
+		left = left & bitMask;
+		String unencryptedText = Long.toHexString(left)+""+Long.toHexString(right);
+		System.out.println("Decrypted: "+Long.toHexString(left)+""+Long.toHexString(right));
+		return unencryptedText;
+	}
+
+
 	public static void main(String args[]) {
-		String key = "A56D";
 		String keyString1 = "0xA56BABCD0000F000FFFFFFFFABCDEF01";
+		Long delta = Long.parseLong("9e3779b9",16);
 
 		Long[] keyArray = convertStringToArray(keyString1);
-		Long keyStringNew = Long.parseLong(key,16);
-		System.out.println("Int to string: "+keyStringNew);
-		System.out.println("String[0]: "+keyArray[0]);
-		System.out.println("Print entire key: "+keyArray[0]+","+keyArray[1]+","+keyArray[2]+","+keyArray[3]);
 
-		System.out.println("In TEA");
+		String plain = "0x0123456789ABCDEF";
+
+		String encryptedText = encrypt(keyArray,delta,plain);
+		System.out.println("Encrypted: "+encryptedText);
+		String decryptedText = decrypt(keyArray,delta,encryptedText);
+		System.out.println("Decrypted: "+decryptedText);
+
+
 	}
 }
