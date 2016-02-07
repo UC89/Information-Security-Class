@@ -1,13 +1,10 @@
-import java.io.*;
-
-
+/*
+TEA Encryption and Decryption Assignment for CS492
+By: Taylor Somma
+Long integers used because they are enough bits to hold any 63 Bit message. Also when shifting left during the encryption and decryption there will be no overflow error and any bits over 32 can be masked with a bitwise AND operation.
+*/
 
 public class teaEncryption {
-
-	public String openFile(String path) {
-		// FileReader fileReader = new FileReader(path);
-		return "Return String";
-	}
 
 	public static Long[] convertStringToArray(String keyString) {
 		//int foo = Integer.parseInt("1234");
@@ -20,9 +17,9 @@ public class teaEncryption {
 	}
 
 	public static Long encrypt(Long[] keyArray,Long delta,Long plainText) {
-		Long sum = 0L;
-		Long bitMask = 0x00000000FFFFFFFFL;
 
+		Long bitMask = 0x00000000FFFFFFFFL;
+		Long sum = 0L;
 		Long left =  plainText>>>32;
 		Long right = plainText & bitMask;
 
@@ -40,15 +37,8 @@ public class teaEncryption {
 		right = right & bitMask;
 		left = left & bitMask;
 
-		String cipherText = left+""+right;
-		System.out.println("Encrypted: "+Long.toHexString(left)+""+Long.toHexString(right));
-
 		left = left << 32;
-		System.out.println("Encrypted Left: "+Long.toHexString(left));
-		System.out.println("Encrypted Right: "+Long.toHexString(right));
 		Long cipherLong = left | right;
-		System.out.println("Encrypted Long: "+Long.toHexString(cipherLong));
-
 		return cipherLong;
 	}
 
@@ -75,24 +65,25 @@ public class teaEncryption {
 		Long decryptedText = left | right;
 		Long decryptMask = 0x7FFFFFFFFFFFFFFFL;
 		decryptedText = decryptedText & decryptMask;
-		System.out.println("Decrypted: "+Long.toHexString(decryptedText));
 		return decryptedText;
 	}
 
 
 	public static void main(String args[]) {
+		//Key passed as string because it is too large for any of the built in java types
 		String keyString1 = "0xA56BABCD0000F000FFFFFFFFABCDEF01";
 		Long delta = 0x9e3779b9L;
-
 		Long[] keyArray = convertStringToArray(keyString1);
-
 		Long plain = 0x0123456789ABCDEFL;
 
 		Long encryptedText = encrypt(keyArray,delta,plain);
 		Long decryptedText = decrypt(keyArray,delta,encryptedText);
 
-		System.out.println("Encrypted: "+encryptedText);
-
+		//Print plain text
+		System.out.println("Plain Text: " + Long.toHexString(plain));
+		//Print encrypted text
+		System.out.println("Encrypted: "+Long.toHexString(encryptedText));
+		//Print decryption
 		System.out.println("Decrypted: "+Long.toHexString(decryptedText));
 	}
 }
